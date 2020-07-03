@@ -6,6 +6,7 @@ use crate::{
     Task,
     DependencyGraph,
     assets::Asset,
+    builder::{build_shader_asset, BuildContext},
 };
 use colored::Colorize;
 
@@ -43,9 +44,9 @@ impl Workspace {
         if let Some(asset) = task.get_asset() {
             println!("{}", "Building Asset".yellow());
             
-            // insert known dependencies
             match asset {
                 Asset::Shader(shader_asset) => {
+                    // insert known dependencies
                     let dependencies = shader_asset.get_dependencies(task.get_absolute_path())?;
 
                     for dependency in dependencies.iter() {
@@ -59,6 +60,10 @@ impl Workspace {
                         let content_path = dependency.relative_from(&self.path);
                         self.dependencies.add_dependency(task.get_content_path(), &content_path);
                     }
+
+                    // build the shader
+                    let mut context = BuildContext::new(task.get_absolute_path().clone());
+                    build_shader_asset(shader_asset, &mut context)?;
                 },
             }
 

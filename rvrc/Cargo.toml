@@ -20,3 +20,4 @@ serde_json = "1.0"
 petgraph = "0.5"
 tinypath = { git = "https://github.com/Vengarioth/tinypath.git", rev = "df82763a4f787dc57e76d8aaa5172f7a30e69ff0" }
 colored = "1.9"
+shaderc = "0.6"

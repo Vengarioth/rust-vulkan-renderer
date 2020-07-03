@@ -3,7 +3,8 @@ mod command;
 mod tasks;
 mod workspace;
 mod dependency_graph;
-pub mod assets;
+mod assets;
+mod builder;
 
 use dependency_graph::*;
 use error::*;

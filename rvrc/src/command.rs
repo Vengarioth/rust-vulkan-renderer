@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use structopt::*;
 
 #[derive(Debug, StructOpt)]
-#[structopt(about = "RVR CLI")]
+#[structopt(about = "rvrc")]
 pub enum Command {
     Build {
         #[structopt(parse(from_os_str), help = "the path to the workspace you want to build")]

@@ -1,5 +1,7 @@
 {
     "asset_type": "Shader",
     "vertex_shader": "./vert.glsl",
-    "fragment_shader": "./frag.glsl"
+    "vertex_shader_entry_point": "main",
+    "fragment_shader": "./frag.glsl",
+    "fragment_shader_entry_point": "main"
 }

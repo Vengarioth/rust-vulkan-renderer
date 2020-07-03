@@ -19,7 +19,9 @@ impl Asset {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ShaderAsset {
     pub vertex_shader: String,
+    pub vertex_shader_entry_point: String,
     pub fragment_shader: String,
+    pub fragment_shader_entry_point: String,
 }
 
 impl ShaderAsset {
