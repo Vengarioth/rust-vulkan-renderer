@@ -1,6 +1,7 @@
 use tinypath::Path;
 use std::collections::HashMap;
-use petgraph::{Graph, graph::NodeIndex, dot::{Dot, Config}};
+use petgraph::{Graph, graph::NodeIndex, dot::{Dot, Config}, Direction};
+use crate::Error;
 
 #[derive(Debug)]
 pub struct DependencyGraph {
@@ -41,6 +42,18 @@ impl DependencyGraph {
 
         if self.graph.find_edge(*from, *to).is_none() {
             self.graph.add_edge(*from, *to, ());
+        }
+    }
+
+    pub fn find_dependant_assets(&self, path: &Path) -> Result<Vec<Path>, Error> {
+        if let Some(query) = self.path_to_node.get(path) {
+            let paths = self.graph.neighbors_directed(*query, Direction::Incoming)
+                .map(|node| self.graph.node_weight(node).unwrap().clone())
+                .collect();
+            
+            Ok(paths)
+        } else {
+            Ok(Vec::new())
         }
     }
 

@@ -8,11 +8,12 @@ use crate::{
     assets::Asset,
 };
 
-fn wrap(result: Result<(), Error>) {
+fn wrap<T>(result: Result<T, Error>) -> Option<T> {
     match result {
-        Ok(()) => {},
+        Ok(value) => Some(value),
         Err(error) => {
             println!("{}", error);
+            None
         },
     }
 }
@@ -33,10 +34,15 @@ impl Workspace {
         }
     }
 
-    fn process_task(&mut self, task: Task) -> Result<(), Error> {
+    fn process_task(&mut self, task: Task, build_dependencies: bool) -> Result<(), Error> {
+        println!("Processing {}", task.get_content_path().to_string());
+
         self.dependencies.insert_asset(task.get_content_path());
 
         if let Some(asset) = task.get_asset() {
+            println!("Building Asset");
+            
+            // insert known dependencies
             match asset {
                 Asset::Shader(shader_asset) => {
                     let dependencies = shader_asset.get_dependencies(task.get_absolute_path())?;
@@ -54,7 +60,38 @@ impl Workspace {
                     }
                 },
             }
+
+            println!("Asset built");
+        } else {
+            println!("Querying Dependencies");
+
+            // find parent asset
+            let dependants = self.dependencies.find_dependant_assets(task.get_content_path())?;
+            for dependant in dependants {
+
+                if build_dependencies {
+                    let absolute_path =  dependant.relative_to(&self.path);
+                    let std_path: std::path::PathBuf = absolute_path.clone().into();
+                    let metadata = std::fs::metadata(&std_path).unwrap();
+    
+                    if let Some(task) = wrap(create_task(absolute_path, &self.path, metadata.len())) {
+                        self.process_task(task, build_dependencies)?;
+                    }
+                }
+            }
         }
+
+        Ok(())
+    }
+
+    fn rebuild(&mut self, path: std::path::PathBuf) -> Result<(), Error> {
+        if path.is_dir() {
+            return Ok(());
+        }
+
+        let metadata = std::fs::metadata(&path)?;
+        let task = create_task(Path::from_std_path(&path).unwrap(), &self.path, metadata.len())?;
+        self.process_task(task, true)?;
 
         Ok(())
     }
@@ -63,7 +100,6 @@ impl Workspace {
         use notify::{RecommendedWatcher, Watcher, RecursiveMode, DebouncedEvent};
         use std::sync::mpsc::channel;
         use std::time::Duration;
-        use std::fs;
 
         let (tx, rx) = channel();
 
@@ -73,31 +109,16 @@ impl Workspace {
         watcher.watch(&watch_path, RecursiveMode::Recursive).unwrap();
 
         self.walk();
-        self.dependencies.print_dot();
 
         loop {
             match rx.recv() {
                 Ok(event) => {
                     match event {
                         DebouncedEvent::Write(path) => {
-                            if path.is_dir() {
-                                continue;
-                            }
-
-                            let metadata = fs::metadata(&path).unwrap();
-                            let task = create_task(Path::from_std_path(&path).unwrap(), &self.path, metadata.len()).unwrap();
-                            wrap(self.process_task(task));
-                            self.dependencies.print_dot();
+                            wrap(self.rebuild(path));
                         },
                         DebouncedEvent::Create(path) => {
-                            if path.is_dir() {
-                                continue;
-                            }
-
-                            let metadata = fs::metadata(&path).unwrap();
-                            let task = create_task(Path::from_std_path(&path).unwrap(), &self.path, metadata.len()).unwrap();
-                            wrap(self.process_task(task));
-                            self.dependencies.print_dot();
+                            wrap(self.rebuild(path));
                         },
                         DebouncedEvent::Rename(from, to) => {
                             if from.is_dir() || to.is_dir() {
@@ -107,10 +128,7 @@ impl Workspace {
                             let content_path = Path::from_std_path(&from).unwrap().relative_from(&self.path);
                             self.dependencies.remove_asset(content_path);
 
-                            let metadata = fs::metadata(&to).unwrap();
-                            let task = create_task(Path::from_std_path(&to).unwrap(), &self.path, metadata.len()).unwrap();
-                            wrap(self.process_task(task));
-                            self.dependencies.print_dot();
+                            wrap(self.rebuild(to));
                         },
                         DebouncedEvent::Remove(path) => {
                             if path.is_dir() {
@@ -118,9 +136,7 @@ impl Workspace {
                             }
 
                             let content_path = Path::from_std_path(&path).unwrap().relative_from(&self.path);
-
                             self.dependencies.remove_asset(content_path);
-                            self.dependencies.print_dot();
                         }
                         _ => {},
                     }
@@ -142,8 +158,12 @@ impl Workspace {
                             continue;
                         }
 
-                        let task = create_task(Path::from_std_path(entry.path().into()).unwrap(), &self.path, metadata.len()).unwrap();
-                        wrap(self.process_task(task));
+                        if let Some(task) = wrap(create_task(Path::from_std_path(entry.path().into()).unwrap(), &self.path, metadata.len())) {
+                            // only run asset tasks on build or first run
+                            if task.is_asset() {
+                                wrap(self.process_task(task, false));
+                            }
+                        }
                     }
 
                 },

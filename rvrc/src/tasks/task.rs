@@ -63,6 +63,10 @@ impl Task {
         &self.content_path
     }
 
+    pub fn is_asset(&self) -> bool {
+        self.asset.is_some()
+    }
+
     pub fn get_asset(&self) -> Option<&Asset> {
         if let Some(ref asset) = self.asset {
             Some(asset)
