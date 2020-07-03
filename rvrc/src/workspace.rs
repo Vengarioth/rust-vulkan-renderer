@@ -7,12 +7,13 @@ use crate::{
     DependencyGraph,
     assets::Asset,
 };
+use colored::Colorize;
 
 fn wrap<T>(result: Result<T, Error>) -> Option<T> {
     match result {
         Ok(value) => Some(value),
         Err(error) => {
-            println!("{}", error);
+            println!("{}", error.to_string().red());
             None
         },
     }
@@ -35,12 +36,12 @@ impl Workspace {
     }
 
     fn process_task(&mut self, task: Task, build_dependencies: bool) -> Result<(), Error> {
-        println!("Processing {}", task.get_content_path().to_string());
+        println!("{} {}", "Processing".blue(), task.get_absolute_path().to_string().yellow());
 
         self.dependencies.insert_asset(task.get_content_path());
 
         if let Some(asset) = task.get_asset() {
-            println!("Building Asset");
+            println!("{}", "Building Asset".yellow());
             
             // insert known dependencies
             match asset {
@@ -61,9 +62,9 @@ impl Workspace {
                 },
             }
 
-            println!("Asset built");
+            println!("{}", "Asset built".green());
         } else {
-            println!("Querying Dependencies");
+            println!("{}", "Querying Dependencies".yellow());
 
             // find parent asset
             let dependants = self.dependencies.find_dependant_assets(task.get_content_path())?;
