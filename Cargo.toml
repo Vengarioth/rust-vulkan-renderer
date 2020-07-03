@@ -2,6 +2,7 @@
 
 members = [
     "rvr",
+    "rvr-assets",
     "rvr-standalone",
     "rvrc",
 ]

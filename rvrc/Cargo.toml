@@ -7,3 +7,15 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+structopt = "0.3"
+thiserror = "1.0"
+anyhow = "1.0"
+ignore = "0.4"
+notify = "4.0"
+memmap = "0.7"
+blake3 = "0.3"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+petgraph = "0.5"
+tinypath = { git = "https://github.com/Vengarioth/tinypath.git", rev = "df82763a4f787dc57e76d8aaa5172f7a30e69ff0" }
