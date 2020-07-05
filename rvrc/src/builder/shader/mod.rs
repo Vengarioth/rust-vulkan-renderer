@@ -3,13 +3,17 @@ use crate::{
     builder::BuildContext,
     assets::ShaderAsset,
 };
-use tinypath::Path;
 
 mod compile;
 mod compile_error;
+mod reflect;
+mod reflect_error;
 
 use compile::*;
 pub use compile_error::*;
+
+use reflect::*;
+pub use reflect_error::*;
 
 pub fn build_shader_asset(asset: &ShaderAsset, context: &mut BuildContext) -> Result<(), Error> {
 
@@ -32,6 +36,9 @@ pub fn build_shader_asset(asset: &ShaderAsset, context: &mut BuildContext) -> Re
         &context.get_full_path(&asset.fragment_shader).to_platform_string(),
         shaderc::ShaderKind::Fragment,
     )?;
+
+    reflect(&vertex_shader_binary, &asset.vertex_shader_entry_point)?;
+    reflect(&fragment_shader_binary, &asset.fragment_shader_entry_point)?;
 
     dbg!(vertex_shader_source);
     dbg!(fragment_shader_source);

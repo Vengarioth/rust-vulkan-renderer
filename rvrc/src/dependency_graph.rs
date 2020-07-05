@@ -57,7 +57,7 @@ impl DependencyGraph {
         }
     }
 
-    pub fn print_dot(&self) {
-        println!("{:?}", Dot::with_config(&self.graph, &[Config::EdgeNoLabel]));
-    }
+    // pub fn print_dot(&self) {
+    //     println!("{:?}", Dot::with_config(&self.graph, &[Config::EdgeNoLabel]));
+    // }
 }

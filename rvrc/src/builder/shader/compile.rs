@@ -29,7 +29,10 @@ pub fn compile(entry_point: &str, source: &str, file_name: &str, shader_kind: Sh
     let mut options = shaderc::CompileOptions::new().ok_or(CompileError::Initialization)?;
 
     options.set_include_callback(|include_path, include_type, source_path, _| {
-        Ok(include(include_path, source_path).map_err(|error| error.to_string())?)
+        match include_type {
+            IncludeType::Standard => unimplemented!(),
+            IncludeType::Relative => Ok(include(include_path, source_path).map_err(|error| error.to_string())?),
+        }
     });
 
     let result = compiler.compile_into_spirv(

@@ -21,3 +21,4 @@ petgraph = "0.5"
 tinypath = { git = "https://github.com/Vengarioth/tinypath.git", rev = "7fdcc7da504c065feb6cffb066a09c56d05f7561" }
 colored = "1.9"
 shaderc = "0.6"
+spirv-reflect = "0.2"
