@@ -1,6 +1,11 @@
 use tinypath::Path;
 use std::collections::HashMap;
-use petgraph::{Graph, graph::NodeIndex, dot::{Dot, Config}, Direction};
+use petgraph::{
+    Graph,
+    graph::NodeIndex,
+    // dot::{Dot, Config},
+    Direction,
+};
 use crate::Error;
 
 #[derive(Debug)]
