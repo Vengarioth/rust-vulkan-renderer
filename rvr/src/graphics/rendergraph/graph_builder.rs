@@ -7,8 +7,8 @@ use crate::{
 pub struct GraphBuilder {
     create_images: Vec<ImageResource>,
     import_images: Vec<ImageResource>,
-    id_generator: IdGenerator,
     passes: Vec<Pass>,
+    id_generator: IdGenerator,
 }
 
 impl GraphBuilder {
@@ -16,8 +16,8 @@ impl GraphBuilder {
         Self {
             create_images: Vec::new(),
             import_images: Vec::new(),
-            id_generator: IdGenerator::new(),
             passes: Vec::new(),
+            id_generator: IdGenerator::new(),
         }
     }
 
@@ -44,12 +44,18 @@ impl GraphBuilder {
         let pass_data = initialize(&mut pass_builder);
         
         let executor = FnOnceExecutor::new(pass_data.clone(), Box::new(execute));
-        // Box::new(executor)
-        // pass_builder.build();
-        let pass = Pass::new();
 
-        self.passes.push(pass);
+        self.passes.push(pass_builder.build(Box::new(executor)));
 
         pass_data
+    }
+
+    pub(crate) fn build(self, result_images: &[ImageHandle]) -> Graph {
+        Graph::new(
+            self.create_images,
+            self.import_images,
+            Vec::from(result_images),
+            self.passes,
+        )
     }
 }

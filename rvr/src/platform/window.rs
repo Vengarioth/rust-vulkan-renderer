@@ -1,3 +1,4 @@
+use raw_window_handle::*;
 use sdl2::{
     event::{Event, WindowEvent},
     keyboard::Keycode,
@@ -6,7 +7,6 @@ use sdl2::{
     Sdl as SdlContext,
     VideoSubsystem,
 };
-
 use crate::{
     Error,
     RuntimeError,
@@ -71,6 +71,10 @@ impl Window {
             format,
             refresh_rate,
         })
+    }
+
+    pub fn get_window_handle(&self) -> RawWindowHandle {
+        self.inner.raw_window_handle()
     }
 
     pub fn get_backbuffer_image_description(&self) -> ImageDescription {

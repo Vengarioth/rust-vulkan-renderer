@@ -11,4 +11,12 @@ impl ImageHandle {
             version,
         }
     }
+
+    pub(crate) fn previous_version(&self) -> Option<Self> {
+        if self.version > 0 {
+            Some(Self::new(self.id, self.version - 1))
+        } else {
+            None
+        }
+    }
 }
