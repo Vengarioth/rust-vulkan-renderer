@@ -30,6 +30,7 @@ mod tests {
         let start = std::time::Instant::now();
         let mut builder = GraphBuilder::new();
 
+        // define all images used to render the frame
         let back_buffer = builder.import_image("Back Buffer", ImageDescription::new(
             1920,
             1080,
@@ -98,16 +99,17 @@ mod tests {
 
             shadow_map
         }, |_, _| {
-
+            // rendering code omitted
         });
 
+        // define all render passes needed to render the frame
         let (depth_buffer, velocity_buffer) = builder.add_pass("Z Prepass", |builder| {
             let depth_buffer = builder.depth_stencil_attachment(depth_buffer);
             let velocity_buffer = builder.color_attachment(velocity_buffer);
 
             (depth_buffer, velocity_buffer)
         }, |_, _| {
-
+            // rendering code omitted
         });
 
         let (hdr_buffer, normals_buffer, specular_buffer, depth_buffer) = builder.add_pass("Render Scene", |builder| {
@@ -120,7 +122,7 @@ mod tests {
 
             (hdr_buffer, normals_buffer, specular_buffer, depth_buffer)
         }, |_, _| {
-
+            // rendering code omitted
         });
 
         let hdr_buffer = builder.add_pass("Reflections", |builder| {
@@ -133,7 +135,7 @@ mod tests {
 
             hdr_buffer
         }, |_, _| {
-
+            // rendering code omitted
         });
 
         let back_buffer = builder.add_pass("Post Process", |builder| {
@@ -147,11 +149,13 @@ mod tests {
 
             back_buffer
         }, |_, _| {
-
+            // rendering code omitted
         });
 
+        // construct the graph
         let graph = builder.build(&[back_buffer]);
 
+        // compile the schedule, this linearizes the graph into a list of instructions for the renderer
         graph.compile_schedule();
 
         let elapsed = start.elapsed();
