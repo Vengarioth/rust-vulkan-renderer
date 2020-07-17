@@ -24,7 +24,7 @@ impl Graph {
     }
 
     pub fn compile_schedule(&self) {
-        use std::collections::HashMap;
+        use std::collections::{HashMap, HashSet};
 
         // first, create a hashmap that maps ImageHandle to pass.id
         let mut image_sources = HashMap::new();
@@ -43,7 +43,7 @@ impl Graph {
         let mut passes = HashMap::new();
         let mut dependency_graph = DirectedGraph::new();
         for pass in self.passes.iter() {
-            let pass_index = dependency_graph.add_node(pass.name.to_string());
+            let pass_index = dependency_graph.add_node((pass.id, pass.name.to_string()));
             passes.insert(pass.id, pass_index);
         }
 
@@ -81,18 +81,48 @@ impl Graph {
             }
         }
 
-        let roots: Vec<NodeIndex> = self.result_images.iter()
-            .map(|image| image_sources.get(image).unwrap())
-            .map(|pass| *passes.get(pass).unwrap())
-            .collect();
+        let mut transition_images = Vec::new();
+        let mut root_passes = Vec::new();
 
-        dependency_graph.print_graphviz(|n| n.to_string());
-        let order = dependency_graph.topological_sort(&roots);
+        for result_image in self.result_images.iter() {
+            if let Some(pass) = image_sources.get(result_image) {
+                // image gets presented and was part of a render pass
+                root_passes.push(*passes.get(pass).unwrap());
+            } else {
+                // image gets presented, but was not part of any render pass
+                transition_images.push(result_image);
+            }
+        }
 
+        // the order in which passes get executed
+        // we ignore potential optimizations like collapsing passes for now
+        let order = dependency_graph.topological_sort(&root_passes);
+        
+        let mut created_images = HashSet::new();
 
+        // dependency_graph.print_graphviz(|(_, name)| name.to_string());
         order.iter().for_each(|index| {
-            let name = dependency_graph.get_node(*index).to_string();
-            println!("{}", name);
+            let (id, _) = dependency_graph.get_node(*index);
+
+            let pass = self.passes.iter().find(|p| p.id == *id).unwrap();
+
+            for color_attachment in pass.render_target.color_attachments.iter() {
+                if !created_images.contains(color_attachment) {
+                    // TODO create image
+                    created_images.insert(color_attachment.clone());
+                }
+            }
+
+            if let Some(depth_stencil_attachment) = &pass.render_target.depth_stencil_attachment {
+                if !created_images.contains(depth_stencil_attachment) {
+                    // TODO create image
+                    created_images.insert(depth_stencil_attachment.clone());
+                }
+            }
+
+            // TODO execute pass
         });
+
+        // TODO any images left in need of transitioning to another layout?
     }
 }

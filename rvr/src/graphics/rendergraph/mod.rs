@@ -26,6 +26,24 @@ mod tests {
     };
 
     #[test]
+    fn it_works_when_doing_nothing() {
+        let mut builder = GraphBuilder::new();
+
+        let back_buffer = builder.import_image("Back Buffer", ImageDescription::new(
+            1920,
+            1080,
+            ImageFormat::R8G8B8A8_SRGB,
+            ImageType::Type2D,
+            SampleCount::Type_1,
+            ImageLayout::Unknown,
+        )).unwrap();
+
+        let graph = builder.build(&[back_buffer]);
+
+        graph.compile_schedule();
+    }
+
+    #[test]
     fn it_works() {
         let start = std::time::Instant::now();
         let mut builder = GraphBuilder::new();
@@ -161,6 +179,6 @@ mod tests {
         let elapsed = start.elapsed();
         println!("{:?}", elapsed);
 
-        panic!("{}", "");
+        // panic!("{}", "");
     }
 }
