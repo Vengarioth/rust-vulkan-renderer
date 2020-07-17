@@ -29,16 +29,17 @@ impl<'a> PassBuilder<'a> {
         self.sample_images.push(image);
     }
 
-    pub fn color_attachment(&mut self, image: ImageHandle) -> ImageHandle {
+    pub fn color_attachment(&mut self, image: ImageHandle) -> Result<ImageHandle, Error> {
         let next_image = ImageHandle::new(image.id, image.version + 1);
 
         self.color_attachments.push(next_image.clone());
 
-        next_image
+        Ok(next_image)
     }
 
-    pub fn depth_stencil_attachment(&mut self, image: ImageHandle) -> ImageHandle {
+    pub fn depth_stencil_attachment(&mut self, image: ImageHandle) -> Result<ImageHandle, Error> {
         if self.depth_stencil_attachment.is_some() {
+            // TODO make proper error
             panic!("{}", "TODO depth stencil attachment already defined");
         }
 
@@ -46,7 +47,7 @@ impl<'a> PassBuilder<'a> {
 
         self.depth_stencil_attachment = Some(next_image.clone());
 
-        next_image
+        Ok(next_image)
     }
 
     pub(crate) fn build(self, executor: Box<dyn Executor>) -> Pass {

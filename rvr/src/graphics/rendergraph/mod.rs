@@ -45,7 +45,6 @@ mod tests {
         let schedule = graph.compile_schedule();
 
         dbg!(schedule);
-        // panic!("{}", "");
     }
 
     #[test]
@@ -118,35 +117,35 @@ mod tests {
         )).unwrap();
 
         let shadow_map = builder.add_pass("Render Shadow Map", |builder| {
-            let shadow_map = builder.depth_stencil_attachment(shadow_map);
+            let shadow_map = builder.depth_stencil_attachment(shadow_map)?;
 
-            shadow_map
+            Ok(shadow_map)
         }, |_, _| {
             // rendering code omitted
-        });
+        }).unwrap();
 
         // define all render passes needed to render the frame
         let (depth_buffer, velocity_buffer) = builder.add_pass("Z Prepass", |builder| {
-            let depth_buffer = builder.depth_stencil_attachment(depth_buffer);
-            let velocity_buffer = builder.color_attachment(velocity_buffer);
+            let depth_buffer = builder.depth_stencil_attachment(depth_buffer)?;
+            let velocity_buffer = builder.color_attachment(velocity_buffer)?;
 
-            (depth_buffer, velocity_buffer)
+            Ok((depth_buffer, velocity_buffer))
         }, |_, _| {
             // rendering code omitted
-        });
+        }).unwrap();
 
         let (hdr_buffer, normals_buffer, specular_buffer, depth_buffer) = builder.add_pass("Render Scene", |builder| {
             
             builder.sample_image(shadow_map);
-            let depth_buffer = builder.depth_stencil_attachment(depth_buffer);
-            let hdr_buffer = builder.color_attachment(hdr_buffer);
-            let normals_buffer = builder.color_attachment(normals_buffer);
-            let specular_buffer = builder.color_attachment(specular_buffer);
+            let depth_buffer = builder.depth_stencil_attachment(depth_buffer)?;
+            let hdr_buffer = builder.color_attachment(hdr_buffer)?;
+            let normals_buffer = builder.color_attachment(normals_buffer)?;
+            let specular_buffer = builder.color_attachment(specular_buffer)?;
 
-            (hdr_buffer, normals_buffer, specular_buffer, depth_buffer)
+            Ok((hdr_buffer, normals_buffer, specular_buffer, depth_buffer))
         }, |_, _| {
             // rendering code omitted
-        });
+        }).unwrap();
 
         let hdr_buffer = builder.add_pass("Reflections", |builder| {
             
@@ -154,12 +153,12 @@ mod tests {
             builder.sample_image(normals_buffer);
             builder.sample_image(specular_buffer);
 
-            let hdr_buffer = builder.color_attachment(hdr_buffer);
+            let hdr_buffer = builder.color_attachment(hdr_buffer)?;
 
-            hdr_buffer
+            Ok(hdr_buffer)
         }, |_, _| {
             // rendering code omitted
-        });
+        }).unwrap();
 
         let back_buffer = builder.add_pass("Post Process", |builder| {
             
@@ -167,23 +166,22 @@ mod tests {
             builder.sample_image(normals_buffer);
             builder.sample_image(hdr_buffer);
             builder.sample_image(velocity_buffer);
-            let back_buffer = builder.color_attachment(back_buffer);
+            let back_buffer = builder.color_attachment(back_buffer)?;
 
 
-            back_buffer
+            Ok(back_buffer)
         }, |_, _| {
             // rendering code omitted
-        });
+        }).unwrap();
 
         // construct the graph
         let graph = builder.build(&[back_buffer]);
 
         // compile the schedule, this linearizes the graph into a list of instructions for the renderer
         let schedule = graph.compile_schedule();
+        dbg!(schedule);
 
         let elapsed = start.elapsed();
         println!("{:?}", elapsed);
-
-        // panic!("{}", "");
     }
 }

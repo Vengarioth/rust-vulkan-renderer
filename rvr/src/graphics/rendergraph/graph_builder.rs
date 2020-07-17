@@ -35,19 +35,19 @@ impl GraphBuilder {
         Ok(ImageHandle::new(id, 0))
     }
 
-    pub fn add_pass<I, E: 'static, PassData: 'static + Clone>(&mut self, name: &str, initialize: I, execute: E) -> PassData
-        where I: FnOnce(&mut PassBuilder) -> PassData,
+    pub fn add_pass<I, E: 'static, PassData: 'static + Clone>(&mut self, name: &str, initialize: I, execute: E) -> Result<PassData, Error>
+        where I: FnOnce(&mut PassBuilder) -> Result<PassData, Error>,
         E: FnOnce(PassData, &mut ExecuteContext)
     {
         let id = self.id_generator.next();
         let mut pass_builder = PassBuilder::new(id, name.to_string(), &mut self.id_generator);
-        let pass_data = initialize(&mut pass_builder);
+        let pass_data = initialize(&mut pass_builder)?;
         
         let executor = FnOnceExecutor::new(pass_data.clone(), Box::new(execute));
 
         self.passes.push(pass_builder.build(Box::new(executor)));
 
-        pass_data
+        Ok(pass_data)
     }
 
     pub(crate) fn build(self, result_images: &[ImageHandle]) -> Graph {

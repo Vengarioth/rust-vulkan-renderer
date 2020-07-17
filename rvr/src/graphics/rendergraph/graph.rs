@@ -29,7 +29,7 @@ impl Graph {
     pub fn compile_schedule(&self) -> Schedule {
         use std::collections::{HashMap, HashSet};
 
-        // first, create a hashmap that maps ImageHandle to pass.id
+        // first, create a hashmap that maps ImageHandle to the pass id that created it, if any
         let mut image_sources = HashMap::new();
         for pass in self.passes.iter() {
             for color_attachment in pass.render_target.color_attachments.iter() {
@@ -84,6 +84,9 @@ impl Graph {
             }
         }
 
+        // then find the passes we have to execute and prune passes we don't need this frame
+        // also find all images that were never part of a pass but need to transition layout
+        // to be presented
         let mut transition_images = Vec::new();
         let mut root_passes = Vec::new();
 
@@ -101,6 +104,7 @@ impl Graph {
         // we ignore potential optimizations like collapsing passes for now
         let order = dependency_graph.topological_sort(&root_passes);
         
+        // now we start building the linear schedule to be executed by the renderer
         let mut created_images = HashSet::new();
         let mut image_layouts = HashMap::new();
         let mut schedule = ScheduleBuilder::new();
@@ -113,10 +117,9 @@ impl Graph {
             image_layouts.insert(image.id, image.description.initial_layout);
         }
 
-        // dependency_graph.print_graphviz(|(_, name)| name.to_string());
+        // iterate over all passes in execution order
         order.iter().for_each(|index| {
             let (id, _) = dependency_graph.get_node(*index);
-
             let pass = self.passes.iter().find(|p| p.id == *id).unwrap();
 
             for color_attachment in pass.render_target.color_attachments.iter() {
@@ -133,10 +136,12 @@ impl Graph {
                 }
             }
 
+            // TODO define render pass
+
             // TODO execute pass
         });
 
-        // TODO any images left in need of transitioning to another layout?
+        // insert barriers for images that still need to be transitioned to another layout
         for transition_image in transition_images {
             let from_layout = *image_layouts.get(&transition_image.id).unwrap();
             let to_layout = ImageLayout::Present;
