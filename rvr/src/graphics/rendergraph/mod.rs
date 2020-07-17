@@ -7,6 +7,7 @@ mod pass_builder;
 mod execute_context;
 mod executor;
 mod schedule;
+mod schedule_builder;
 
 pub use images::*;
 pub use render_targets::*;
@@ -17,6 +18,7 @@ pub use pass_builder::*;
 pub use execute_context::*;
 pub use executor::*;
 pub use schedule::*;
+pub use schedule_builder::*;
 
 #[cfg(test)]
 mod tests {
@@ -40,7 +42,10 @@ mod tests {
 
         let graph = builder.build(&[back_buffer]);
 
-        graph.compile_schedule();
+        let schedule = graph.compile_schedule();
+
+        dbg!(schedule);
+        // panic!("{}", "");
     }
 
     #[test]
@@ -174,7 +179,7 @@ mod tests {
         let graph = builder.build(&[back_buffer]);
 
         // compile the schedule, this linearizes the graph into a list of instructions for the renderer
-        graph.compile_schedule();
+        let schedule = graph.compile_schedule();
 
         let elapsed = start.elapsed();
         println!("{:?}", elapsed);

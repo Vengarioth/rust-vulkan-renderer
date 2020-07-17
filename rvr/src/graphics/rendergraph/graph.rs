@@ -1,5 +1,8 @@
 use super::*;
-use crate::util::{DirectedGraph, NodeIndex};
+use crate::{
+    graphics::*,
+    util::DirectedGraph,
+};
 
 pub struct Graph {
     create_images: Vec<ImageResource>,
@@ -23,7 +26,7 @@ impl Graph {
         }
     }
 
-    pub fn compile_schedule(&self) {
+    pub fn compile_schedule(&self) -> Schedule {
         use std::collections::{HashMap, HashSet};
 
         // first, create a hashmap that maps ImageHandle to pass.id
@@ -99,6 +102,16 @@ impl Graph {
         let order = dependency_graph.topological_sort(&root_passes);
         
         let mut created_images = HashSet::new();
+        let mut image_layouts = HashMap::new();
+        let mut schedule = ScheduleBuilder::new();
+
+        // first set all image layouts to their initial states
+        for image in self.create_images.iter() {
+            image_layouts.insert(image.id, image.description.initial_layout);
+        }
+        for image in self.import_images.iter() {
+            image_layouts.insert(image.id, image.description.initial_layout);
+        }
 
         // dependency_graph.print_graphviz(|(_, name)| name.to_string());
         order.iter().for_each(|index| {
@@ -124,5 +137,17 @@ impl Graph {
         });
 
         // TODO any images left in need of transitioning to another layout?
+        for transition_image in transition_images {
+            let from_layout = *image_layouts.get(&transition_image.id).unwrap();
+            let to_layout = ImageLayout::Present;
+
+            schedule.add_image_layout_barrier(
+                transition_image.id,
+                from_layout,
+                to_layout,
+            );
+        }
+
+        schedule.build()
     }
 }
