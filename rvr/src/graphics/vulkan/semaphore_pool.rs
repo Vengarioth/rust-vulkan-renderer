@@ -3,6 +3,7 @@ use ash::{
     version::*,
 };
 use crate::Error;
+use super::*;
 use std::sync::Arc;
 
 pub struct SemaphorePool {
@@ -16,15 +17,15 @@ impl SemaphorePool {
         }
     }
 
-    pub fn get_semaphore(&mut self) -> Result<vk::Semaphore, Error> {
+    pub fn get_semaphore(&mut self) -> Result<Semaphore, Error> {
         let create_info = vk::SemaphoreCreateInfo::default();
-        let semaphore = unsafe { self.device.create_semaphore(&create_info, None)? };
-        Ok(semaphore)
+        let inner = unsafe { self.device.create_semaphore(&create_info, None)? };
+        Ok(Semaphore::new(inner))
     }
 
-    pub fn return_semaphore(&mut self, semaphore: vk::Semaphore) {
+    pub fn return_semaphore(&mut self, semaphore: Semaphore) {
         unsafe {
-            self.device.destroy_semaphore(semaphore, None);
+            self.device.destroy_semaphore(semaphore.get_inner(), None);
         }
     }
 }

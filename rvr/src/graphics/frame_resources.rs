@@ -3,7 +3,7 @@ use crate::graphics::Resources;
 use crate::graphics::vulkan::*;
 
 pub struct FrameResourceBuilder {
-    semaphores: Vec<vk::Semaphore>,
+    semaphores: Vec<Semaphore>,
     command_pools: Vec<CommandPool>,
 }
 
@@ -15,7 +15,7 @@ impl FrameResourceBuilder {
         }
     }
 
-    pub fn add_semaphore(&mut self, semaphore: vk::Semaphore) {
+    pub fn add_semaphore(&mut self, semaphore: Semaphore) {
         self.semaphores.push(semaphore);
     }
 
@@ -23,7 +23,7 @@ impl FrameResourceBuilder {
         self.command_pools.push(command_pool);
     }
 
-    pub fn build(self, fence: vk::Fence) -> FrameResources {
+    pub fn build(self, fence: Fence) -> FrameResources {
         FrameResources::new(
             fence,
             self.semaphores,
@@ -33,8 +33,8 @@ impl FrameResourceBuilder {
 }
 
 pub struct FrameResources {
-    fence: vk::Fence,
-    semaphores: Vec<vk::Semaphore>,
+    fence: Fence,
+    semaphores: Vec<Semaphore>,
     command_pools: Vec<CommandPool>,
 }
 
@@ -44,8 +44,8 @@ impl FrameResources {
     }
     
     fn new(
-        fence: vk::Fence,
-        semaphores: Vec<vk::Semaphore>,
+        fence: Fence,
+        semaphores: Vec<Semaphore>,
         command_pools: Vec<CommandPool>,
     ) -> Self {
         Self {
@@ -55,8 +55,8 @@ impl FrameResources {
         }
     }
 
-    pub fn get_fence(&self) -> vk::Fence {
-        self.fence
+    pub fn get_fence(&self) -> &Fence {
+        &self.fence
     }
 
     pub fn recycle(self, resources: &mut Resources) {

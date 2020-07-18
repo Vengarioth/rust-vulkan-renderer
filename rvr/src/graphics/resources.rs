@@ -17,19 +17,19 @@ impl Resources {
         }
     }
 
-    pub fn get_semaphore(&mut self) -> Result<vk::Semaphore, Error> {
+    pub fn get_semaphore(&mut self) -> Result<Semaphore, Error> {
         self.semaphores.get_semaphore()
     }
     
-    pub fn return_semaphore(&mut self, semaphore: vk::Semaphore) {
+    pub fn return_semaphore(&mut self, semaphore: Semaphore) {
         self.semaphores.return_semaphore(semaphore);
     }
     
-    pub fn get_fence(&mut self) -> Result<vk::Fence, Error> {
+    pub fn get_fence(&mut self) -> Result<Fence, Error> {
         self.fences.get_fence()
     }
 
-    pub fn return_fence(&mut self, fence: vk::Fence) {
+    pub fn return_fence(&mut self, fence: Fence) {
         self.fences.return_fence(fence);
     }
 

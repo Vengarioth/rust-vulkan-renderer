@@ -47,7 +47,7 @@ impl Renderer {
 
         for i in (0..self.pending_frame_resources.len()).rev() {
             let fence = self.pending_frame_resources[i].get_fence();
-            let completed = self.device.get_fence_status(fence)?;
+            let completed = self.device.get_fence_status(fence.get_inner())?;
 
             if completed {
                 let resources = self.pending_frame_resources.remove(i);
@@ -61,7 +61,7 @@ impl Renderer {
         let submit_semaphore = self.resources.get_semaphore()?;
         let finish_submit_fence = self.resources.get_fence()?;
         let command_pool = self.device.create_command_pool(self.device.graphics_queue_index)?;
-        if let Some(index) = self.swapchain.acquire_next_image(std::u64::MAX, acquire_semaphore, Fence::null())? {
+        if let Some(index) = self.swapchain.acquire_next_image(std::u64::MAX, acquire_semaphore.get_inner(), Fence::null())? {
 
             let mut command_buffers = command_pool.allocate_command_buffers(1, true)?;
             let mut command_buffer = command_buffers.remove(0);
@@ -87,9 +87,16 @@ impl Renderer {
 
             command_buffer.end()?;
 
-            self.device.queue_submit(self.device.graphics_queue, &command_buffer, &[ash::vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT], &[acquire_semaphore], &[submit_semaphore], finish_submit_fence)?;
+            self.device.queue_submit(
+                self.device.graphics_queue,
+                &command_buffer,
+                &[ash::vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT],
+                &[acquire_semaphore.get_inner()],
+                &[submit_semaphore.get_inner()],
+                finish_submit_fence.get_inner(),
+            )?;
 
-            if self.swapchain.present(index, self.device.graphics_queue, submit_semaphore)? {
+            if self.swapchain.present(index, self.device.graphics_queue, submit_semaphore.get_inner())? {
                 // TODO recreate swapchain
             }
         }

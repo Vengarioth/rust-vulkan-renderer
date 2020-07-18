@@ -5,6 +5,7 @@ use ash::{
 };
 use std::sync::Arc;
 use crate::Error;
+use super::*;
 
 pub struct FencePool {
     device: Arc<Device>,
@@ -17,15 +18,15 @@ impl FencePool {
         }
     }
 
-    pub fn get_fence(&mut self) -> Result<vk::Fence, Error> {
+    pub fn get_fence(&mut self) -> Result<Fence, Error> {
         let create_info = vk::FenceCreateInfo::default();
-        let fence = unsafe { self.device.create_fence(&create_info, None)? };
-        Ok(fence)
+        let inner = unsafe { self.device.create_fence(&create_info, None)? };
+        Ok(Fence::new(inner))
     }
 
-    pub fn return_fence(&mut self, fence: vk::Fence) {
+    pub fn return_fence(&mut self, fence: Fence) {
         unsafe {
-            self.device.destroy_fence(fence, None);
+            self.device.destroy_fence(fence.get_inner(), None);
         }
     }
 }
