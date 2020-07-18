@@ -174,14 +174,57 @@ impl Device {
         )
     }
 
+    pub fn create_fence_pool(&self) -> Result<FencePool, Error> {
+        Ok(FencePool::new(Arc::clone(&self.inner)))
+    }
+
+    pub fn get_fence_status(&self, fence: vk::Fence) -> Result<bool, Error> {
+        Ok(unsafe { self.inner.get_fence_status(fence)? })
+    }
+
     pub fn create_semaphore_pool(&self) -> Result<SemaphorePool, Error> {
         Ok(SemaphorePool::new(Arc::clone(&self.inner)))
+    }
+
+    pub fn create_command_pool(&self, queue_family_index: u32) -> Result<CommandPool, Error> {
+        CommandPool::create(Arc::clone(&self.inner), queue_family_index)
+    }
+
+    pub fn queue_submit(&self, queue: vk::Queue, command_buffer: &CommandBuffer, wait_stage_masks: &[vk::PipelineStageFlags], wait_semaphores: &[vk::Semaphore], signal_semaphores: &[vk::Semaphore], fence: vk::Fence) -> Result<(), Error> {
+
+        let submit_buffers = [command_buffer.get_inner()];
+
+        let submit_info = vk::SubmitInfo::builder()
+            .wait_semaphores(wait_semaphores)
+            .signal_semaphores(signal_semaphores)
+            .wait_dst_stage_mask(&wait_stage_masks)
+            .command_buffers(&submit_buffers);
+
+        unsafe {
+            self.inner.queue_submit(
+                queue,
+                &[submit_info.build()],
+                fence,
+            )?;
+        }
+
+        Ok(())
+    }
+
+    pub fn wait_idle(&self) -> Result<(), Error> {
+        unsafe {
+            self.inner.device_wait_idle()?;
+        }
+
+        Ok(())
     }
 }
 
 impl Drop for Device {
     fn drop(&mut self) {
         unsafe {
+            self.inner.device_wait_idle().unwrap();
+
             ManuallyDrop::drop(&mut self.allocator);
             self.inner.destroy_device(None);
             ManuallyDrop::drop(&mut self.surface);

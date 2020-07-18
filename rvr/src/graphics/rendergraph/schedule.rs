@@ -25,4 +25,8 @@ impl Schedule {
             instructions,
         }
     }
+
+    pub fn get_instructions(&self) -> &[Instruction] {
+        &self.instructions
+    }
 }

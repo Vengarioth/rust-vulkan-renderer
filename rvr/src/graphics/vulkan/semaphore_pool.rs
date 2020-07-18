@@ -23,6 +23,8 @@ impl SemaphorePool {
     }
 
     pub fn return_semaphore(&mut self, semaphore: vk::Semaphore) {
-        drop(semaphore);
+        unsafe {
+            self.device.destroy_semaphore(semaphore, None);
+        }
     }
 }

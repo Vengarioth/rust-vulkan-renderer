@@ -1,15 +1,21 @@
+mod command_buffer;
+mod command_pool;
 mod debugger;
 mod device;
 mod extensions;
+mod fence_pool;
 mod layers;
 mod surface;
 mod device_profile;
 mod swapchain;
 mod semaphore_pool;
 
+pub use command_buffer::*;
+pub use command_pool::*;
 pub use debugger::*;
 pub use device::*;
 pub use extensions::*;
+pub use fence_pool::*;
 pub use layers::*;
 pub use surface::*;
 pub use device_profile::*;
