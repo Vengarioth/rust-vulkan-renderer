@@ -31,10 +31,9 @@ pub struct Device {
 
     inner: Arc<ash::Device>,
 
-    pub graphics_queue_index: u32,
-    pub graphics_queue: vk::Queue,
-    pub transfer_queue_index: u32,
-    pub transfer_queue: vk::Queue,
+    pub graphics_queue: Queue,
+    pub compute_queue: Queue,
+    pub transfer_queue: Queue,
 }
 
 impl Device {
@@ -103,11 +102,15 @@ impl Device {
         let graphics_queue_index = profile
             .get_graphics_queue_index()
             .ok_or(GraphicsError::NoSuitableGraphicsQueue)? as u32;
+        let compute_queue_index = profile
+            .get_compute_queue_index()
+            .ok_or(GraphicsError::NoSuitableComputeQueue)? as u32;
         let transfer_queue_index = profile
             .get_transfer_queue_index()
             .ok_or(GraphicsError::NoSuitableTransferQueue)? as u32;
 
         let graphics_priorities = [1.0];
+        let compute_priorities = [0.9];
         let transfer_priorities = [0.8];
         let device_extension_names_raw = [khr::Swapchain::name().as_ptr()];
 
@@ -115,6 +118,10 @@ impl Device {
             vk::DeviceQueueCreateInfo::builder()
                 .queue_family_index(graphics_queue_index as u32)
                 .queue_priorities(&graphics_priorities)
+                .build(),
+            vk::DeviceQueueCreateInfo::builder()
+                .queue_family_index(compute_queue_index as u32)
+                .queue_priorities(&compute_priorities)
                 .build(),
             vk::DeviceQueueCreateInfo::builder()
                 .queue_family_index(transfer_queue_index as u32)
@@ -130,7 +137,36 @@ impl Device {
 
         let inner = unsafe { instance.create_device(physical_device, &device_create_info, None)? };
         let graphics_queue = unsafe { inner.get_device_queue(graphics_queue_index, 0) };
+        let compute_queue = unsafe { inner.get_device_queue(compute_queue_index, 0) };
         let transfer_queue = unsafe { inner.get_device_queue(transfer_queue_index, 0) };
+
+        let graphics_queue = Queue::new(
+            graphics_queue_index,
+            0,
+            graphics_queue,
+            true,
+            true,
+            true,
+            true,
+        );
+        let compute_queue = Queue::new(
+            compute_queue_index,
+            0,
+            compute_queue,
+            false,
+            false,
+            true,
+            true,
+        );
+        let transfer_queue = Queue::new(
+            transfer_queue_index,
+            0,
+            transfer_queue,
+            false,
+            false,
+            false,
+            true,
+        );
 
         let allocator_create_info = AllocatorCreateInfo {
             physical_device: physical_device,
@@ -155,9 +191,8 @@ impl Device {
 
             inner: Arc::new(inner),
 
-            graphics_queue_index,
             graphics_queue,
-            transfer_queue_index,
+            compute_queue,
             transfer_queue,
         })
     }

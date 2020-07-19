@@ -79,6 +79,7 @@ pub struct DeviceProfile {
     device_name: String,
     graphics_queue_index: Option<usize>,
     transfer_queue_index: Option<usize>,
+    compute_queue_index: Option<usize>,
     score: f32,
 }
 
@@ -90,6 +91,10 @@ impl DeviceProfile {
 
     pub fn get_graphics_queue_index(&self) -> Option<usize> {
         self.graphics_queue_index
+    }
+
+    pub fn get_compute_queue_index(&self) -> Option<usize> {
+        self.compute_queue_index
     }
 
     pub fn get_transfer_queue_index(&self) -> Option<usize> {
@@ -118,6 +123,7 @@ impl DeviceProfile {
 
                 let mut graphics_queue_index = None;
                 let mut transfer_queue_index = None;
+                let mut compute_queue_index = None;
 
                 for index in 0..queue_families.len() {
                     let queue_family = queue_families[index];
@@ -126,8 +132,10 @@ impl DeviceProfile {
                     let supports_compute = queue_family.queue_flags.contains(vk::QueueFlags::COMPUTE);
                     let supports_transfer = queue_family.queue_flags.contains(vk::QueueFlags::TRANSFER);
 
-                    if supports_graphics && surface_support && graphics_queue_index.is_none() {
+                    if supports_graphics && surface_support && supports_compute && supports_transfer && graphics_queue_index.is_none() {
                         graphics_queue_index = Some(index);
+                    } else if supports_compute && supports_transfer && compute_queue_index.is_none() {
+                        compute_queue_index = Some(index);
                     } else if supports_transfer && !supports_graphics && !supports_compute && transfer_queue_index.is_none() {
                         transfer_queue_index = Some(index);
                     }
@@ -140,6 +148,7 @@ impl DeviceProfile {
                     device_name,
                     graphics_queue_index,
                     transfer_queue_index,
+                    compute_queue_index,
                     score,
                 }
             })

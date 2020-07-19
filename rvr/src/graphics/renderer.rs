@@ -60,7 +60,7 @@ impl Renderer {
         let acquire_semaphore = self.resources.get_semaphore()?;
         let submit_semaphore = self.resources.get_semaphore()?;
         let finish_submit_fence = self.resources.get_fence()?;
-        let command_pool = self.device.create_command_pool(self.device.graphics_queue_index)?;
+        let command_pool = self.device.create_command_pool(self.device.graphics_queue.get_family_index())?;
         if let Some(index) = self.swapchain.acquire_next_image(std::u64::MAX, acquire_semaphore.get_inner(), Fence::null())? {
 
             let mut command_buffers = command_pool.allocate_command_buffers(1, true)?;
@@ -88,7 +88,7 @@ impl Renderer {
             command_buffer.end()?;
 
             self.device.queue_submit(
-                self.device.graphics_queue,
+                self.device.graphics_queue.get_inner(),
                 &command_buffer,
                 &[ash::vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT],
                 &[acquire_semaphore.get_inner()],
@@ -96,7 +96,7 @@ impl Renderer {
                 finish_submit_fence.get_inner(),
             )?;
 
-            if self.swapchain.present(index, self.device.graphics_queue, submit_semaphore.get_inner())? {
+            if self.swapchain.present(index, self.device.graphics_queue.get_inner(), submit_semaphore.get_inner())? {
                 // TODO recreate swapchain
             }
         }

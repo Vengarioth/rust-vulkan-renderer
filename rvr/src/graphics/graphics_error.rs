@@ -8,6 +8,9 @@ pub enum GraphicsError {
     #[error("No suitable graphics queue found")]
     NoSuitableGraphicsQueue,
 
+    #[error("No suitable compute queue found")]
+    NoSuitableComputeQueue,
+
     #[error("No suitable transfer queue found")]
     NoSuitableTransferQueue,
 
