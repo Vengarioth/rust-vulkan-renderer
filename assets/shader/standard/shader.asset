@@ -1,7 +1,15 @@
 {
     "asset_type": "Shader",
-    "vertex_shader": "./vert.glsl",
-    "vertex_shader_entry_point": "main",
-    "fragment_shader": "./frag.glsl",
-    "fragment_shader_entry_point": "main"
+    "stages": [
+        {
+            "stage_type": "Vertex",
+            "entry_point": "main",
+            "source": "./vert.glsl"
+        },
+        {
+            "stage_type": "Fragment",
+            "entry_point": "main",
+            "source": "./frag.glsl"
+        }
+    ]
 }

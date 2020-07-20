@@ -16,4 +16,10 @@ pub enum ReflectError {
 
     #[error("Could not enumerate push constants: {0}")]
     EnumeratePushConstants(String),
+    
+    #[error("Unknown descriptor type")]
+    UnknownDescriptorType,
+
+    #[error("Unknown format")]
+    UnknownFormat,
 }

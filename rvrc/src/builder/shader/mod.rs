@@ -4,12 +4,16 @@ use crate::{
     assets::ShaderAsset,
 };
 
+mod attributes;
 mod compile;
 mod compile_error;
+mod descriptors;
 mod reflect;
 mod reflect_error;
 
+use attributes::*;
 use compile::*;
+use descriptors::*;
 pub use compile_error::*;
 
 use reflect::*;
@@ -17,34 +21,42 @@ pub use reflect_error::*;
 
 pub fn build_shader_asset(asset: &ShaderAsset, context: &mut BuildContext) -> Result<(), Error> {
 
-    let vertex_shader_source = context.load(&asset.vertex_shader)?;
-    let fragment_shader_source = context.load(&asset.fragment_shader)?;
+    let mut descriptor_sets = DescriptorSets::new();
+    let mut vertex_attributes = None;
 
-    let vertex_shader_source = std::str::from_utf8(&vertex_shader_source)?;
-    let fragment_shader_source = std::str::from_utf8(&fragment_shader_source)?;
+    let mut stages = Vec::new();
+    for stage in &asset.stages {
+        let source = context.load(&stage.source)?;
+        let source = std::str::from_utf8(&source)?;
 
-    let vertex_shader_binary = compile(
-        &asset.vertex_shader_entry_point,
-        vertex_shader_source,
-        &context.get_full_path(&asset.vertex_shader).to_platform_string(),
-        shaderc::ShaderKind::Vertex,
-    )?;
+        let binary = compile(
+            &stage.entry_point,
+            source,
+            &context.get_full_path(&stage.source).to_platform_string(),
+            stage.stage_type.into(),
+        )?;
 
-    let fragment_shader_binary = compile(
-        &asset.fragment_shader_entry_point,
-        fragment_shader_source,
-        &context.get_full_path(&asset.fragment_shader).to_platform_string(),
-        shaderc::ShaderKind::Fragment,
-    )?;
+        let attributes = reflect(&binary, &stage.entry_point, &mut descriptor_sets, stage.stage_type.into())?;
 
-    reflect(&vertex_shader_binary, &asset.vertex_shader_entry_point)?;
-    reflect(&fragment_shader_binary, &asset.fragment_shader_entry_point)?;
+        let shader_stage = rvr_assets::shader::ShaderStage::new(
+            stage.entry_point.clone(),
+            binary,
+            stage.stage_type.into(),
+        );
 
-    dbg!(vertex_shader_source);
-    dbg!(fragment_shader_source);
+        if stage.stage_type == crate::assets::ShaderStageType::Vertex {
+            vertex_attributes = Some(attributes);
+        }
+    }
 
-    dbg!(vertex_shader_binary);
-    dbg!(fragment_shader_binary);
+    let descriptor_set_layouts = descriptor_sets.build_layouts();
+
+    let shader_asset = rvr_assets::shader::ShaderAsset::new(
+        stages,
+        vertex_attributes.unwrap(), // TODO
+        descriptor_set_layouts,
+        Vec::new(),
+    );
 
     Ok(())
 }
