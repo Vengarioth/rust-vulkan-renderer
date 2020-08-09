@@ -7,6 +7,7 @@ use crate::{
     DependencyGraph,
     assets::Asset,
     builder::{build_shader_asset, BuildContext},
+    BundleBuilder,
 };
 use colored::Colorize;
 
@@ -36,7 +37,7 @@ impl Workspace {
         }
     }
 
-    fn process_task(&mut self, task: Task, build_dependencies: bool) -> Result<(), Error> {
+    fn process_task(&mut self, task: Task, build_dependencies: bool, bundle: &mut BundleBuilder) -> Result<(), Error> {
         println!("{} {}", "Processing".blue(), task.get_absolute_path().to_string().yellow());
 
         self.dependencies.insert_asset(task.get_content_path());
@@ -63,7 +64,9 @@ impl Workspace {
 
                     // build the shader
                     let mut context = BuildContext::new(task.get_absolute_path().clone());
-                    build_shader_asset(shader_asset, &mut context)?;
+                    let shader_asset = build_shader_asset(shader_asset, &mut context)?;
+
+                    bundle.add_shader(task.get_content_path().to_string(), shader_asset)?;
                 },
             }
 
@@ -81,7 +84,7 @@ impl Workspace {
                     let metadata = std::fs::metadata(&std_path).unwrap();
     
                     if let Some(task) = wrap(create_task(absolute_path, &self.path, metadata.len())) {
-                        self.process_task(task, build_dependencies)?;
+                        self.process_task(task, build_dependencies, bundle)?;
                     }
                 }
             }
@@ -95,9 +98,11 @@ impl Workspace {
             return Ok(());
         }
 
+        let mut builder = BundleBuilder::new();
+
         let metadata = std::fs::metadata(&path)?;
         let task = create_task(Path::from_std_path(&path).unwrap(), &self.path, metadata.len())?;
-        self.process_task(task, true)?;
+        self.process_task(task, true, &mut builder)?;
 
         Ok(())
     }
@@ -155,6 +160,7 @@ impl Workspace {
     }
 
     pub fn walk(&mut self) {
+        let mut builder = BundleBuilder::new();
         let walk_path: std::path::PathBuf = self.path.clone().into();
         for result in Walk::new(walk_path) {
             match result {
@@ -167,16 +173,16 @@ impl Workspace {
                         if let Some(task) = wrap(create_task(Path::from_std_path(entry.path().into()).unwrap(), &self.path, metadata.len())) {
                             // only run asset tasks on build or first run
                             if task.is_asset() {
-                                wrap(self.process_task(task, false));
+                                wrap(self.process_task(task, false, &mut builder));
                             }
                         }
                     }
-
                 },
                 Err(error) => {
                     dbg!(error);
                 },
             }
         }
+        wrap(builder.build(self.output_path.clone()));
     }
 }

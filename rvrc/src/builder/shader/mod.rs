@@ -1,8 +1,9 @@
 use crate::{
     Error,
     builder::BuildContext,
-    assets::ShaderAsset,
+    assets::ShaderAssetDescription,
 };
+use rvr_assets::shader::*;
 
 mod attributes;
 mod compile;
@@ -19,7 +20,7 @@ pub use compile_error::*;
 use reflect::*;
 pub use reflect_error::*;
 
-pub fn build_shader_asset(asset: &ShaderAsset, context: &mut BuildContext) -> Result<(), Error> {
+pub fn build_shader_asset(asset: &ShaderAssetDescription, context: &mut BuildContext) -> Result<ShaderAsset, Error> {
 
     let mut descriptor_sets = DescriptorSets::new();
     let mut vertex_attributes = None;
@@ -44,6 +45,8 @@ pub fn build_shader_asset(asset: &ShaderAsset, context: &mut BuildContext) -> Re
             stage.stage_type.into(),
         );
 
+        stages.push(shader_stage);
+
         if stage.stage_type == crate::assets::ShaderStageType::Vertex {
             vertex_attributes = Some(attributes);
         }
@@ -58,5 +61,5 @@ pub fn build_shader_asset(asset: &ShaderAsset, context: &mut BuildContext) -> Re
         Vec::new(),
     );
 
-    Ok(())
+    Ok(shader_asset)
 }

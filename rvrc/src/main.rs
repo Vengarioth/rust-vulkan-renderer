@@ -5,12 +5,14 @@ mod workspace;
 mod dependency_graph;
 mod assets;
 mod builder;
+mod bundle_builder;
 
 use dependency_graph::*;
 use error::*;
 use command::*;
 use tasks::*;
 use workspace::*;
+use bundle_builder::*;
 
 use tinypath::Path;
 use colored::Colorize;

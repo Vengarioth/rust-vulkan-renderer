@@ -6,7 +6,7 @@ use tinypath::Path;
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "asset_type")]
 pub enum Asset {
-    Shader(ShaderAsset),
+    Shader(ShaderAssetDescription),
 }
 
 impl Asset {
@@ -49,18 +49,18 @@ impl Into<rvr_assets::shader::ShaderStageType> for ShaderStageType {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ShaderStage {
+pub struct ShaderStageDescription {
     pub stage_type: ShaderStageType,
     pub entry_point: String,
     pub source: Path,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ShaderAsset {
-    pub stages: Vec<ShaderStage>,
+pub struct ShaderAssetDescription {
+    pub stages: Vec<ShaderStageDescription>,
 }
 
-impl ShaderAsset {
+impl ShaderAssetDescription {
     pub fn get_dependencies(&self, file_path: &Path) -> Result<Vec<Path>, Error> {
         Ok(self
             .stages
