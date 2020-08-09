@@ -23,9 +23,12 @@ impl Runtime {
         let configuration = Configuration::new();
         let renderer = Renderer::create(configuration, window.get_window_handle())?;
 
+        let assets = crate::assets::AssetManager::new();
+
         let context = Context::new(
             window,
             renderer,
+            assets,
         );
         
         Ok(Self {

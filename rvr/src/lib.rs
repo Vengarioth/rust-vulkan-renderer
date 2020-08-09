@@ -5,6 +5,8 @@ mod runtime;
 mod catch;
 mod platform;
 mod util;
+mod assets;
+pub mod threading;
 pub mod graphics;
 
 pub use application::*;
