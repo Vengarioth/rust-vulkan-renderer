@@ -5,12 +5,15 @@ use rvr::{
     Context,
     Runtime,
     graphics::rendergraph::*,
+    load_shader,
 };
 
 pub struct RVRApplication;
 
 impl Application for RVRApplication {
     fn initialize(&mut self, context: &mut Context) -> Result<(), Error> {
+        let shader = load_shader(context, "./assets/shader/standard/shader.asset")?;
+
         Ok(())
     }
     fn update(&mut self, context: &mut Context) -> Result<(), Error> {

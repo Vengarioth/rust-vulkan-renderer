@@ -6,11 +6,13 @@ mod catch;
 mod platform;
 mod util;
 mod assets;
-pub mod threading;
+mod collections;
 pub mod graphics;
+pub mod threading;
 
 pub use application::*;
 pub use context::*;
 pub use error::*;
 pub use runtime::*;
 pub use catch::*;
+pub use assets::api::*;

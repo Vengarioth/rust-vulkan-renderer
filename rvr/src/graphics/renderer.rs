@@ -11,6 +11,7 @@ use crate::{
     graphics::vulkan::*,
 };
 use std::ffi::CString;
+use std::sync::Arc;
 
 pub struct Renderer {
     configuration: Configuration,
@@ -18,7 +19,7 @@ pub struct Renderer {
     swapchain: Swapchain,
     resources: Resources,
     pending_frame_resources: Vec<FrameResources>,
-    device: Device,
+    device: Arc<Device>,
 }
 
 impl Renderer {
@@ -37,12 +38,16 @@ impl Renderer {
             swapchain,
             resources,
             pending_frame_resources,
-            device,
+            device: Arc::new(device),
         })
     }
 
+    pub fn create_transfer_device(&self) -> Result<TransferDevice, Error> {
+        let device = Arc::clone(&self.device);
+        Ok(TransferDevice::new(device))
+    }
+
     pub fn render(&mut self, graph: Graph) -> Result<(), Error> {
-        
         let schedule = graph.compile_schedule();
 
         for i in (0..self.pending_frame_resources.len()).rev() {

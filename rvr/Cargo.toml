@@ -7,6 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+rvr-assets = { path = "../rvr-assets" }
 anyhow = "1.0"
 thiserror = "1.0"
 msgbox = "0.5"
@@ -17,3 +18,7 @@ vk-mem = "0.2"
 logos = "0.11"
 colour = "0.5"
 crossbeam-channel = "0.4"
+serde = "1.0"
+serde_derive = "1.0"
+bincode = "1.3"
+hashbrown = "0.8"

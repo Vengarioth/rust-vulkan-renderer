@@ -23,7 +23,10 @@ impl Runtime {
         let configuration = Configuration::new();
         let renderer = Renderer::create(configuration, window.get_window_handle())?;
 
-        let assets = crate::assets::AssetManager::new();
+        let transfer_device = renderer.create_transfer_device()?;
+
+        let index = crate::assets::load_index("./dist/index.db")?;
+        let assets = crate::assets::AssetManager::new(index, transfer_device);
 
         let context = Context::new(
             window,
@@ -43,6 +46,8 @@ impl Runtime {
         
         loop {
             let exit = self.context.window.poll_events();
+
+            self.context.assets.update(&mut self.context.renderer)?;
 
             self.application.update(&mut self.context)?;
 

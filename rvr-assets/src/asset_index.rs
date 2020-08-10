@@ -3,11 +3,11 @@ use serde_derive::*;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AssetLocation {
-    name: String,
-    asset_type: AssetType,
-    file_index: usize,
-    offset: usize,
-    length: usize,
+    pub name: String,
+    pub asset_type: AssetType,
+    pub file_index: usize,
+    pub offset: usize,
+    pub length: usize,
 }
 
 impl AssetLocation {
@@ -24,8 +24,8 @@ impl AssetLocation {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AssetIndex {
-    files: Vec<String>,
-    locations: Vec<AssetLocation>,
+    pub files: Vec<String>,
+    pub locations: Vec<AssetLocation>,
 }
 
 impl AssetIndex {
